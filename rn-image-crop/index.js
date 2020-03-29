@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {Image, ImageBackground, Modal, SafeAreaView, Text, TouchableOpacity, View} from "react-native";
-import * as ImageManipulator from "expo-image-manipulator";
 import PropTypes from 'prop-types'
 
 export default function ImageCrop(props) {
@@ -161,19 +160,7 @@ export default function ImageCrop(props) {
         height: cropRect.height / getRatio(),
       };
 
-      console.log({ crop });
-
-      const result = await ImageManipulator.manipulateAsync(
-        image.uri,
-        [
-          {
-            crop,
-          },
-        ],
-        { format: "jpeg" }
-      );
-
-      onCropImage(result, crop);
+      onCropImage(image, crop);
     }
   };
 

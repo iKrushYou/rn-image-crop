@@ -4,6 +4,7 @@ import ImageCrop from "./rn-image-crop";
 import TestImageVertical from "./test-image-vertical.png";
 import TestImageHorizontal from "./test-image.jpg";
 import TestImage3 from "./test-image-3.png";
+import * as ImageManipulator from "expo-image-manipulator";
 
 // <ImageCrop image={Image.resolveAssetSource(TestImage)} />
 // necessary for a local image, might be useful later
@@ -12,6 +13,21 @@ export default function App() {
   const [showImageCrop, setShowImageCrop] = useState(false);
   const [imageToCrop, setImageToCrop] = useState(TestImageHorizontal);
   const [croppedImage, setCroppedImage] = useState(null);
+
+  const handleCropImage = async (image, crop) => {
+      const result = await ImageManipulator.manipulateAsync(
+        image.uri,
+        [
+          {
+            crop,
+          },
+        ],
+        { format: "jpeg" }
+      );
+
+      setCroppedImage(result);
+      setShowImageCrop(false);
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -56,10 +72,7 @@ export default function App() {
         open={showImageCrop}
         image={Image.resolveAssetSource(imageToCrop)}
         onClose={() => setShowImageCrop(false)}
-        onCropImage={(image) => {
-            setCroppedImage(image)
-            setShowImageCrop(false)
-        }}
+        onCropImage={handleCropImage}
       />
     </SafeAreaView>
   );
