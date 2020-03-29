@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {Image, ImageBackground, Modal, SafeAreaView, Text, TouchableOpacity, View} from "react-native";
 import * as ImageManipulator from "expo-image-manipulator";
+import PropTypes from 'prop-types'
 
 export default function ImageCrop(props) {
   const { image, open, onClose, onCropImage } = props;
@@ -214,6 +215,13 @@ export default function ImageCrop(props) {
       </SafeAreaView>
     </Modal>
   );
+}
+
+ImageCrop.propTypes = {
+  image: PropTypes.object,
+  open: PropTypes.bool,
+  onClose: PropTypes.func,
+  onCropImage: PropTypes.func,
 }
 
 function CropRectangle({ cropRect }) {
