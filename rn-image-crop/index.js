@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {Image, ImageBackground, Modal, SafeAreaView, Text, TouchableOpacity, View} from "react-native";
-import PropTypes from 'prop-types'
+import { Image, ImageBackground, Modal, SafeAreaView, Text, TouchableOpacity, View } from "react-native";
+import PropTypes from "prop-types";
 
 export default function ImageCrop(props) {
   const { image, open, onClose, onCropImage } = props;
@@ -14,7 +14,7 @@ export default function ImageCrop(props) {
     inBounds: false,
     startX: 0,
     startY: 0,
-    location: "",
+    locations: [],
     startCropRect: cropRect,
   });
 
@@ -56,19 +56,23 @@ export default function ImageCrop(props) {
 
       console.log({ cropRect, cropLocationX, cropLocationY });
 
+      const touchPadding = 32;
+
       const outOfBounds =
-        cropLocationX < 0 || cropLocationX > cropRect.width || cropLocationY < 0 || cropLocationY > cropRect.height;
+        cropLocationX < -touchPadding ||
+        cropLocationX > cropRect.width + touchPadding ||
+        cropLocationY < -touchPadding ||
+        cropLocationY > cropRect.height + touchPadding;
 
-      let location = "center";
+      let locations = [];
 
-      if (cropLocationY >= cropRect.height - Math.min(cropRect.height / 4, 32)) location = "bottom";
-      else if (cropLocationY < Math.min(cropRect.height / 4, 32)) location = "top";
-      else if (cropLocationX >= cropRect.width - Math.min(cropRect.width / 4, 32)) location = "right";
-      else if (cropLocationX < Math.min(cropRect.width / 4, 32)) location = "left";
+      if (cropLocationY >= cropRect.height - Math.min(cropRect.height / 4, 32)) locations.push("bottom");
+      if (cropLocationY < Math.min(cropRect.height / 4, 32)) locations.push("top");
+      if (cropLocationX >= cropRect.width - Math.min(cropRect.width / 4, 32)) locations.push("right");
+      if (cropLocationX < Math.min(cropRect.width / 4, 32)) locations.push("left");
+      if (locations.length === 0) locations.push("center");
 
-      console.log({ location });
-
-      setCropDrag({ inBounds: !outOfBounds, startX: locationX, startY: locationY, startCropRect: cropRect, location });
+      setCropDrag({ inBounds: !outOfBounds, startX: locationX, startY: locationY, startCropRect: cropRect, locations });
       if (!outOfBounds) return;
     }
     setCropRect({ new: true, width: 0, height: 0, x: locationX, y: locationY });
@@ -83,34 +87,34 @@ export default function ImageCrop(props) {
       const deltaX = locationX - cropDrag.startX;
       const deltaY = locationY - cropDrag.startY;
 
-      if (cropDrag.location === "center") {
+      if (cropDrag.locations.includes("center")) {
         setCropRect((prev) => ({
           ...prev,
           x: cropDrag.startCropRect.x + deltaX,
           y: cropDrag.startCropRect.y + deltaY,
         }));
       }
-      if (cropDrag.location === "top") {
+      if (cropDrag.locations.includes("top")) {
         setCropRect((prev) => ({
           ...prev,
           y: cropDrag.startCropRect.y + deltaY,
           height: cropDrag.startCropRect.height - deltaY,
         }));
       }
-      if (cropDrag.location === "bottom") {
+      if (cropDrag.locations.includes("bottom")) {
         setCropRect((prev) => ({
           ...prev,
           height: cropDrag.startCropRect.height + deltaY,
         }));
       }
-      if (cropDrag.location === "left") {
+      if (cropDrag.locations.includes("left")) {
         setCropRect((prev) => ({
           ...prev,
           x: cropDrag.startCropRect.x + deltaX,
           width: cropDrag.startCropRect.width - deltaX,
         }));
       }
-      if (cropDrag.location === "right") {
+      if (cropDrag.locations.includes("right")) {
         setCropRect((prev) => ({
           ...prev,
           width: cropDrag.startCropRect.width + deltaX,
@@ -147,6 +151,7 @@ export default function ImageCrop(props) {
       }
       return { ...prev };
     });
+    setCropDrag((prev) => ({ ...prev, locations: [] }));
   };
 
   const handleCropImage = async () => {
@@ -165,7 +170,7 @@ export default function ImageCrop(props) {
   };
 
   return (
-    <Modal visible={open} animationType={'slide'}>
+    <Modal visible={open} animationType={"slide"}>
       <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
         {/*<Text style={{color: 'white', padding: 8, fontSize: 16}}>Drag to start cropping</Text>*/}
         <View
@@ -181,7 +186,7 @@ export default function ImageCrop(props) {
             onTouchEnd={handleImageTouchEnd}
             onLayout={handleImageLayout}
           >
-            <CropRectangle cropRect={cropRect} />
+            {!!cropRect.width && !!cropRect.height && <CropRectangle cropRect={cropRect} cropDrag={cropDrag} />}
           </ImageBackground>
         </View>
         <View
@@ -192,10 +197,14 @@ export default function ImageCrop(props) {
             justifyContent: "center",
           }}
         >
-          <TouchableOpacity style={{ flex: 1, alignItems: 'center' }} onPress={() => onClose()}>
+          <TouchableOpacity style={{ flex: 1, alignItems: "center" }} onPress={() => onClose()}>
             <Text style={{ fontSize: 24, color: "white" }}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={{ flex: 1, alignItems: 'center' }} onPress={handleCropImage} disabled={cropRect.width === 0}>
+          <TouchableOpacity
+            style={{ flex: 1, alignItems: "center" }}
+            onPress={handleCropImage}
+            disabled={cropRect.width === 0}
+          >
             <Text style={{ fontSize: 24, color: cropRect.width === 0 ? "grey" : "white" }}>Crop</Text>
           </TouchableOpacity>
         </View>
@@ -209,9 +218,9 @@ ImageCrop.propTypes = {
   open: PropTypes.bool,
   onClose: PropTypes.func,
   onCropImage: PropTypes.func,
-}
+};
 
-function CropRectangle({ cropRect }) {
+function CropRectangle({ cropRect, cropDrag }) {
   let { x, y, width, height } = cropRect;
 
   if (width < 0) {
@@ -228,54 +237,82 @@ function CropRectangle({ cropRect }) {
     <View
       pointerEvents={"none"}
       style={{
-        backgroundColor: "rgba(255, 255, 255, 0.3)",
+        // backgroundColor: "rgba(255, 255, 255, 0.3)",
         position: "absolute",
         top: y,
         left: x,
         width: width,
         height: height,
+        // overflow: "hidden",
+        // margin: 3,
       }}
     >
+      {new Array(4).fill(0).map((_, i) => {
+        const sides = ["top", "right", "bottom", "left"];
+        return (
+          <View
+            key={i}
+            style={{
+              position: "absolute",
+              [sides[i]]: -2000,
+              [sides[(i + 1) % 4]]: 0,
+              width: 2000,
+              height: 2000,
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+            }}
+          />
+        );
+      })}
       <View
         style={{
           position: "absolute",
-          backgroundColor: "rgba(255, 0, 0, 0.2)",
           top: 0,
-          left: 0,
           right: 0,
-          height: Math.min(height / 4, 32),
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          backgroundColor: "rgba(255, 0, 0, 0.2)",
           bottom: 0,
           left: 0,
-          right: 0,
-          height: Math.min(height / 4, 32),
+          borderStyle: "solid",
+          borderColor: "rgba(255, 255, 255, 1)",
+          borderTopWidth: cropDrag.locations.includes("top") ? 2 : 1,
+          borderBottomWidth: cropDrag.locations.includes("bottom") ? 2 : 1,
+          borderLeftWidth: cropDrag.locations.includes("left") ? 2 : 1,
+          borderRightWidth: cropDrag.locations.includes("right") ? 2 : 1,
         }}
       />
-      <View
-        style={{
-          position: "absolute",
-          backgroundColor: "rgba(255, 0, 0, 0.2)",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          width: Math.min(width / 4, 32),
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          backgroundColor: "rgba(255, 0, 0, 0.2)",
-          top: 0,
-          bottom: 0,
-          right: 0,
-          width: Math.min(width / 4, 32),
-        }}
-      />
+      {new Array(4).fill(0).map((_, i) => {
+        const sides = ["top", "right", "bottom", "left"];
+
+        return (
+          <React.Fragment key={i}>
+            <View
+              style={[
+                {
+                  position: "absolute",
+                  [sides[(i + 2) % 4].toLowerCase()]: -2,
+                  [sides[(i + 3) % 4].toLowerCase()]: -2,
+                  backgroundColor: "rgba(255, 255, 255, 1)",
+                  flex: -1,
+                  width: 2,
+                  height: Math.min(16, height),
+                },
+              ]}
+            />
+            <View
+              key={i}
+              style={[
+                {
+                  position: "absolute",
+                  [sides[(i + 2) % 4].toLowerCase()]: -2,
+                  [sides[(i + 3) % 4].toLowerCase()]: -2,
+                  backgroundColor: "rgba(255, 255, 255, 1)",
+                  flex: -1,
+                  width: Math.min(16, width),
+                  height: 2,
+                },
+              ]}
+            />
+          </React.Fragment>
+        );
+      })}
     </View>
   );
 }
