@@ -4,6 +4,8 @@
 
 This is a simple library for pompting the user to crop an image. The interface is interactive and allows dragging / resizing of the crop window.
 
+![rn-image-crop demo](https://github.com/iKrushYou/rn-image-crop/blob/master/docs/demo.gif?raw=true)
+
 *Note: still in development, theming is in progress*
 
 [Snack Example](https://snack.expo.io/HkF3nY0LL)
