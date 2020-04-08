@@ -50,4 +50,3 @@ import ImageCrop from "rn-image-crop";
 | `image` | `null`     | `image` | Must be an actual image or a URI. If loaded from disk, wrap in `Image.resolveAssetSource(image)` |                                                                                      
 | `onClose` |      | `func` | Function triggered when user presses the `Cancel` button. |   
 | `onCropImage` |      | `func` | Function triggered when user presses the `Crop` button.<br/>`(image, crop: {originX, originY, width, height}) => {}` |   
-|
