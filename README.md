@@ -8,7 +8,7 @@ This is a simple library for pompting the user to crop an image. The interface i
 
 *Note: still in development, theming is in progress*
 
-[Snack Example](https://snack.expo.io/HkF3nY0LL)
+[Snack Example](https://snack.expo.io/RzkUYII3K)
 
 ## Installation
 
